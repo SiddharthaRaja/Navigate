@@ -1,0 +1,10 @@
+data/
+*.parquet
+*.pbf
+*.geojsonseq
+*.geojson
+.env
+*.key
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
