@@ -121,6 +121,14 @@ class Generator:
         self.t = targets.reset_index(drop=True)
         self.house_seq = dict(zip(self.t["building_id"], house_sequence(self.t)))
         lm = landmarks.set_index("landmark_id")
+        # A "landmark" that is just a place name ("Hyderabad", or a colony's own name) makes nonsense like
+        # "opposite Hyderabad". Drop landmarks whose name is the city or any locality, suburb or complex name.
+        from .context import name_key
+        place_names = {name_key(x) for c in ("locality", "suburb", "area_name") if c in self.t
+                       for x in self.t[c].dropna().unique()}
+        place_names |= {"hyderabad", "secunderabad", "telangana", "cyberabad", "india"}
+        key = lm["name"].map(name_key).str.replace(r"\s+(i{1,3}|iv|v|\d)$", "", regex=True)
+        lm = lm[~key.isin(place_names)]
         self.lm = lm
         rel = relations[relations["landmark_id"].isin(lm.index)].sort_values("building_id").reset_index(drop=True)
         self.rel = rel
@@ -318,6 +326,17 @@ class Generator:
                 p_pin = 1.0
             else:
                 return None                              # nothing truthful to write for this building
+
+        # never say the same place twice ("mythri enclave, mythri enclave")
+        from .context import name_key as _nk
+        seen = set()
+        for k in ("building", "street", "area", "locality", "suburb"):
+            if k in comp:
+                kk = _nk(str(comp[k]))
+                if kk in seen or any(kk and kk in x for x in seen if k in ("locality", "suburb")):
+                    comp.pop(k)
+                else:
+                    seen.add(kk)
 
         if "area" in comp:
             oracle.append(float(haversine_m(r.lat, r.lon, r.area_lat, r.area_lon)))
