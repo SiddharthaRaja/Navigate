@@ -76,3 +76,27 @@ def push_to_hub(paths, repo, folders=("bench", "gazetteer"), private=True):
         api.upload_folder(folder_path=src, path_in_repo=f"{f}/{paths['city']}", repo_id=repo, repo_type="dataset",
                           ignore_patterns=["*.png", "*.geojsonseq", "*.pbf"])
         print("uploaded", src)
+
+
+def pack_outputs(paths, name, files, skip=(".pt", ".safetensors", ".bin")):
+    """Zip one notebook's new output files into <data>/share/<name>.zip, so they can be downloaded and
+    shared in one go. `files` may hold files or folders; missing ones are skipped. Model weights are left out."""
+    import zipfile
+    share = f"{paths['root']}/share"
+    os.makedirs(share, exist_ok=True)
+    out = f"{share}/{name}.zip"
+    added = []
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+        for f in files:
+            todo = [f] if os.path.isfile(f) else [os.path.join(d, x) for d, _, xs in os.walk(f) for x in xs] if os.path.isdir(f) else []
+            for x in todo:
+                if x.endswith(skip):
+                    continue
+                arc = os.path.relpath(x, paths["root"]) if x.startswith(paths["root"]) else os.path.join("repo", os.path.basename(x))
+                z.write(x, arc)
+                added.append((arc, os.path.getsize(x)))
+    for arc, size in added:
+        print(f"  {arc:60s} {size / 1e6:8.1f} MB")
+    print(f"\nPacked {len(added)} files into {out} ({os.path.getsize(out) / 1e6:.1f} MB).")
+    print("Download it from Drive: My Drive > Navigate > data > share")
+    return out
