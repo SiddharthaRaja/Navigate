@@ -10,10 +10,10 @@ import os
 
 
 def where():
+    if os.path.exists("/kaggle/working"):          # checked first: Kaggle's image also looks like Colab
+        return "kaggle"
     if os.path.exists("/content") and "COLAB_RELEASE_TAG" in os.environ:
         return "colab"
-    if os.path.exists("/kaggle/working"):
-        return "kaggle"
     return "local"
 
 
@@ -58,11 +58,43 @@ def setup(city="hyderabad", root=None, hf_repo=None):
     }
     for k in ("raw", "gaz", "bench", "runs", "cache"):
         os.makedirs(p[k], exist_ok=True)
+    if w == "kaggle":
+        import_kaggle_inputs(p)
     hf_repo = hf_repo or os.environ.get("HF_DATA_REPO")
     if w != "colab" and hf_repo and not os.listdir(p["bench"]):
         from huggingface_hub import snapshot_download
         snapshot_download(hf_repo, repo_type="dataset", local_dir=root, token=get_secret("HF_TOKEN"))
     return p
+
+
+GAZ_FILES = {"buildings.parquet", "landmarks.parquet", "roads.parquet", "areas.parquet", "addr_tagged.parquet", "entrances.parquet",
+             "landmark_areas.parquet", "overture_places.parquet", "landmarks_merged.parquet", "real_addresses_overture.parquet",
+             "pincode_areas.parquet", "pincode_method.json", "manifest.json", "manifest_02.json"}
+
+
+def import_kaggle_inputs(p):
+    """Kaggle cannot see Google Drive. Files you attach to a Kaggle notebook (Add Input > upload) appear under
+    /kaggle/input. This copies every file it recognises into the folder the notebooks expect, whatever
+    folder structure the upload had. Files already in place are not overwritten."""
+    import shutil
+    if not os.path.exists("/kaggle/input"):
+        return
+    copied = []
+    for d, _, files in os.walk("/kaggle/input"):
+        for f in files:
+            if f in GAZ_FILES:
+                dest = p["gaz"]
+            elif f.startswith("paraphrase_") or f.endswith(".jsonl"):
+                dest = p["cache"]
+            elif f.endswith((".parquet", ".json")):
+                dest = p["bench"]
+            else:
+                continue
+            if not os.path.exists(os.path.join(dest, f)):
+                shutil.copy(os.path.join(d, f), dest)
+                copied.append(f"{f} -> {dest}")
+    if copied:
+        print("copied from /kaggle/input:\n  " + "\n  ".join(copied))
 
 
 def push_to_hub(paths, repo, folders=("bench", "gazetteer"), private=True):
