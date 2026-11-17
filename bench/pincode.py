@@ -54,7 +54,27 @@ def labelled_points(gaz_dir):
         o = o[o["confidence"] >= 0.6]
         rows.append(pd.DataFrame({"pin": o["addr_postcode"].map(clean_pin), "lat": o["lat"], "lon": o["lon"], "src": "overture"}))
     pts = pd.concat(rows, ignore_index=True).dropna(subset=["pin"])
-    return pts[pts["pin"].str.match(PIN_RE)].reset_index(drop=True)
+    pts = pts[pts["pin"].str.match(PIN_RE)].reset_index(drop=True)
+    return clean_overture(pts)
+
+
+def clean_overture(pts, min_points=5):
+    """Overture pincodes come from business listings and are noisy: a branch may list its head office's pincode,
+    or a typo. Keep an Overture point only if
+      1. its pincode starts like the city's OpenStreetMap pincodes (first two digits),
+      2. that pincode appears at least min_points times, and
+      3. it agrees with the vote of its own Overture neighbours.
+    OpenStreetMap points are kept as they are."""
+    osm, ov = pts[pts["src"] == "osm"], pts[pts["src"] != "osm"]
+    if ov.empty or osm.empty:
+        return pts
+    prefix = osm["pin"].str[:2].mode().iat[0]
+    n = ov["pin"].map(ov["pin"].value_counts())
+    ov = ov[(ov["pin"].str[:2] == prefix) & (n >= min_points)].reset_index(drop=True)
+    if len(ov) > 50:
+        guess, _ = knn_lookup(ov)(ov["lat"].to_numpy(), ov["lon"].to_numpy(), exclude_self=True)
+        ov = ov[np.asarray(guess, object) == ov["pin"].to_numpy()]
+    return pd.concat([osm, ov], ignore_index=True)
 
 
 def _xy(lat, lon):
