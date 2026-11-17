@@ -3,6 +3,8 @@ data/
 *.pbf
 *.geojsonseq
 *.geojson
+*.jsonl
+*.pt
 .env
 *.key
 __pycache__/
