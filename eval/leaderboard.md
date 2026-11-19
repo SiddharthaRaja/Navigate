@@ -1,11 +1,12 @@
 # Leaderboard (Hyderabad, 2026-11-19)
 
-Baselines, open geocoders and model A (H3 classifier). Models B and C and paid geocoders are added as they are run.
+Baselines, open geocoders, model A (H3 classifier) and model B (AddressBind). Model C and paid geocoders are added as they are run.
 
 Full test sets:
 
 | split     | model            |    n |   coverage |   acc@100 |   acc@500 |   acc@1000 |      p50 |      p90 |   misroute |
 |:----------|:-----------------|-----:|-----------:|----------:|----------:|-----------:|---------:|---------:|-----------:|
+| test_cold | addressbind      | 2936 |      1     |     0.005 |     0.189 |      0.377 |  1896.15 | 15840.8  |      0.575 |
 | test_cold | city_centroid    | 2936 |      1     |     0     |     0     |      0     |  9896.6  | 16769.6  |      1     |
 | test_cold | gazetteer_rules  | 2936 |      0.958 |     0.166 |     0.557 |      0.656 |   291.6  |  7778.82 |      0.308 |
 | test_cold | h3_classifier    | 2936 |      1     |     0.003 |     0.165 |      0.345 |  1906.5  | 15855.5  |      0.576 |
@@ -14,6 +15,7 @@ Full test sets:
 | test_cold | photon           |  900 |      0.212 |     0.028 |     0.116 |      0.141 |   399.6  | 13798.7  |      0.361 |
 | test_cold | pincode_centroid | 2936 |      1     |     0.001 |     0.022 |      0.101 |  4392.1  | 13594.1  |      0.587 |
 | test_cold | tfidf_knn        | 2936 |      0.999 |     0.006 |     0.147 |      0.299 |  3707.5  | 18934    |      0.624 |
+| test_real | addressbind      | 2879 |      1     |     0.013 |     0.188 |      0.341 |  2206.7  | 29216.1  |    nan     |
 | test_real | city_centroid    | 2879 |      1     |     0     |     0.001 |      0.006 | 10299.2  | 22832.5  |    nan     |
 | test_real | gazetteer_rules  | 2879 |      0.97  |     0.18  |     0.372 |      0.522 |   842.5  | 14234.8  |    nan     |
 | test_real | h3_classifier    | 2879 |      1     |     0.026 |     0.297 |      0.469 |  1130.4  | 13946.7  |    nan     |
@@ -21,6 +23,7 @@ Full test sets:
 | test_real | photon           |  300 |      0.523 |     0.39  |     0.427 |      0.44  |     0    |  3468.16 |    nan     |
 | test_real | pincode_centroid | 2879 |      1     |     0.009 |     0.123 |      0.33  |  1358.8  | 22801    |    nan     |
 | test_real | tfidf_knn        | 2879 |      0.99  |     0.04  |     0.305 |      0.427 |  1498.7  | 19533.1  |    nan     |
+| test_rel  | addressbind      | 1750 |      1     |     0.042 |     0.334 |      0.484 |  1106.75 | 16230.4  |      0.46  |
 | test_rel  | city_centroid    | 1750 |      1     |     0     |     0.001 |      0.003 |  9832.5  | 20337.9  |      0.999 |
 | test_rel  | gazetteer_rules  | 1750 |      0.957 |     0.379 |     0.65  |      0.707 |   150.3  |  7368.11 |      0.25  |
 | test_rel  | h3_classifier    | 1750 |      1     |     0.057 |     0.331 |      0.469 |  1287.85 | 14941.5  |      0.463 |
@@ -29,6 +32,7 @@ Full test sets:
 | test_rel  | photon           |  450 |      0.069 |     0.02  |     0.036 |      0.044 |   300.2  | 13072.4  |      0.355 |
 | test_rel  | pincode_centroid | 1750 |      1     |     0.001 |     0.043 |      0.152 |  4233.8  | 13921.9  |      0.588 |
 | test_rel  | tfidf_knn        | 1750 |      0.997 |     0.077 |     0.311 |      0.401 |  2099.85 | 18644.8  |      0.552 |
+| test_warm | addressbind      | 2938 |      1     |     0.162 |     0.736 |      0.859 |   266.4  |  1998.3  |      0.168 |
 | test_warm | city_centroid    | 2938 |      1     |     0     |     0.003 |      0.007 | 10818    | 21172.8  |      0.999 |
 | test_warm | gazetteer_rules  | 2938 |      0.96  |     0.174 |     0.582 |      0.673 |   278.9  |  9172.87 |      0.288 |
 | test_warm | h3_classifier    | 2938 |      1     |     0.195 |     0.855 |      0.914 |   190.15 |   745.29 |      0.128 |
@@ -42,6 +46,7 @@ API subset (same rows for every system):
 
 | split     | model            |   n |   coverage |   acc@100 |   acc@500 |   acc@1000 |      p50 |      p90 |   misroute |
 |:----------|:-----------------|----:|-----------:|----------:|----------:|-----------:|---------:|---------:|-----------:|
+| test_cold | addressbind      | 900 |      1     |     0.002 |     0.177 |      0.369 |  2306.9  | 16821.3  |      0.587 |
 | test_cold | city_centroid    | 900 |      1     |     0     |     0     |      0     |  9753.5  | 14806.4  |      1     |
 | test_cold | gazetteer_rules  | 900 |      0.958 |     0.209 |     0.583 |      0.669 |   270.15 |  9517.32 |      0.309 |
 | test_cold | h3_classifier    | 900 |      1     |     0.002 |     0.156 |      0.342 |  2168.55 | 16281.7  |      0.583 |
@@ -50,6 +55,7 @@ API subset (same rows for every system):
 | test_cold | photon           | 900 |      0.212 |     0.028 |     0.116 |      0.141 |   399.6  | 13798.7  |      0.361 |
 | test_cold | pincode_centroid | 900 |      1     |     0     |     0.017 |      0.088 |  4822.35 | 13648.6  |      0.641 |
 | test_cold | tfidf_knn        | 900 |      0.999 |     0.007 |     0.134 |      0.284 |  5577.3  | 19702.2  |      0.655 |
+| test_real | addressbind      | 300 |      1     |     0.01  |     0.187 |      0.347 |  2325.55 | 21727.4  |    nan     |
 | test_real | city_centroid    | 300 |      1     |     0     |     0     |      0.01  |  9944.55 | 22778.6  |    nan     |
 | test_real | gazetteer_rules  | 300 |      0.983 |     0.203 |     0.42  |      0.553 |   730.8  |  7326.6  |    nan     |
 | test_real | h3_classifier    | 300 |      1     |     0.033 |     0.283 |      0.457 |  1225.65 | 13998.1  |    nan     |
@@ -57,6 +63,7 @@ API subset (same rows for every system):
 | test_real | photon           | 300 |      0.523 |     0.39  |     0.427 |      0.44  |     0    |  3468.16 |    nan     |
 | test_real | pincode_centroid | 300 |      1     |     0.01  |     0.123 |      0.34  |  1281.55 | 22757    |    nan     |
 | test_real | tfidf_knn        | 300 |      0.983 |     0.047 |     0.327 |      0.457 |  1249.4  | 21127.6  |    nan     |
+| test_rel  | addressbind      | 450 |      1     |     0.04  |     0.287 |      0.436 |  1412.8  | 15874.1  |      0.467 |
 | test_rel  | city_centroid    | 450 |      1     |     0     |     0.002 |      0.007 |  9973.65 | 19789.4  |      1     |
 | test_rel  | gazetteer_rules  | 450 |      0.971 |     0.371 |     0.664 |      0.724 |   147.6  |  6862.76 |      0.24  |
 | test_rel  | h3_classifier    | 450 |      1     |     0.044 |     0.287 |      0.422 |  1640.35 | 16223.1  |      0.5   |
@@ -65,6 +72,7 @@ API subset (same rows for every system):
 | test_rel  | photon           | 450 |      0.069 |     0.02  |     0.036 |      0.044 |   300.2  | 13072.4  |      0.355 |
 | test_rel  | pincode_centroid | 450 |      1     |     0     |     0.04  |      0.162 |  4221.7  | 13245.3  |      0.584 |
 | test_rel  | tfidf_knn        | 450 |      0.998 |     0.051 |     0.258 |      0.349 |  2852.3  | 19508.5  |      0.586 |
+| test_warm | addressbind      | 900 |      1     |     0.156 |     0.718 |      0.837 |   270.35 |  4646.83 |      0.194 |
 | test_warm | city_centroid    | 900 |      1     |     0     |     0.002 |      0.006 | 10682.4  | 21496.6  |      0.998 |
 | test_warm | gazetteer_rules  | 900 |      0.946 |     0.232 |     0.603 |      0.667 |   259.9  | 10632.3  |      0.298 |
 | test_warm | h3_classifier    | 900 |      1     |     0.172 |     0.821 |      0.901 |   209.6  |   991.95 |      0.143 |

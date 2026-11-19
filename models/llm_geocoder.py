@@ -75,8 +75,27 @@ def build_prompt(tok, address, fmt="digipin", context=None):
 
 
 # ------------------------------------------------------------------ model
+def _remove_old_torchao():
+    """Kaggle ships torchao 0.10, and recent peft refuses to start when it finds a torchao older than it supports.
+    Nothing here uses torchao, so an old copy is uninstalled before peft is imported."""
+    import importlib
+    import importlib.metadata as md
+    import subprocess
+    import sys
+    try:
+        v = md.version("torchao")
+    except md.PackageNotFoundError:
+        return
+    major, minor = (int(x) for x in v.split(".")[:2])
+    if (major, minor) < (0, 16):
+        print(f"removing torchao {v} (too old for peft, not used here)")
+        subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "-q", "torchao"])
+        importlib.invalidate_caches()
+
+
 def load_model(name="Qwen/Qwen2.5-0.5B-Instruct", lora_r=16, lora_alpha=32, lora_targets=("q_proj", "k_proj", "v_proj", "o_proj"), adapter=None):
     """Base model + LoRA adapters. Pass adapter=<folder> to load adapters trained earlier."""
+    _remove_old_torchao()
     from peft import LoraConfig, PeftModel, get_peft_model
     tok = AutoTokenizer.from_pretrained(name)
     if tok.pad_token is None:
