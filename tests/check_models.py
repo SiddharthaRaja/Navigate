@@ -69,6 +69,12 @@ def main(bench_dir):
     print(res[["model", "n", "coverage", "acc@1000", "p50"]].to_string(index=False))
     assert pred["lat"].notna().all() and len(pred) == len(test)
 
+    print("\n--- A: H3 classifier with the character n-gram encoder (the default)")
+    model, tok = hc.train_model(train, cells, encoder_name="char-ngram", epochs=2, batch_size=128, lr=2e-3, head_lr=2e-3, log_every=20)
+    pred = hc.predict(model, tok, test, cells)
+    assert pred["lat"].notna().all() and pred[["lat", "lon"]].round(5).drop_duplicates().shape[0] > 5
+    print("n-gram encoder: ok,", pred[["lat", "lon"]].round(5).drop_duplicates().shape[0], "different answers")
+
     print("\n--- B: AddressBind")
     model, tok = ab.train_model(train, centre, encoder_name=bert, epochs=2, batch_size=128, lr=1e-3, n_extra=64, log_every=10)
     cand = train.drop_duplicates("h3_10")

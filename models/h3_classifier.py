@@ -43,39 +43,96 @@ def build_cells(train, resolutions=(7, 8, 9)):
     return dict(resolutions=tuple(resolutions), vocab=vocab, labels=labels, parent=parent, centre=cen.to_numpy())
 
 
+# ------------------------------------------------------------------ character n-gram encoder (fastText-style)
+class NgramTokenizer:
+    """Turns each address into hashed ids of its words and character 2-4-grams (no download, no vocabulary file).
+    Spelling slips change only a few n-grams, so 'Kukatpaly' and 'Kukatpally' still share most of their ids."""
+
+    def __init__(self, n_buckets=2 ** 19, nmin=2, nmax=4, max_ids=256):
+        self.n_buckets, self.nmin, self.nmax, self.max_ids = n_buckets, nmin, nmax, max_ids
+
+    def ids(self, text):
+        import re
+        import zlib
+        out = []
+        for w in re.findall(r"[a-z0-9]+", (text or "").lower()):
+            out.append(zlib.crc32(("w:" + w).encode()))
+            g = f"<{w}>"
+            for n in range(self.nmin, self.nmax + 1):
+                out += [zlib.crc32(g[i:i + n].encode()) for i in range(len(g) - n + 1)]
+        return [1 + x % (self.n_buckets - 1) for x in out[: self.max_ids]] or [1]
+
+    def __call__(self, texts, **kw):
+        from transformers import BatchEncoding
+        rows = [self.ids(t) for t in texts]
+        n = max(len(r) for r in rows)
+        x = torch.zeros(len(rows), n, dtype=torch.long)
+        for i, r in enumerate(rows):
+            x[i, :len(r)] = torch.tensor(r)
+        return BatchEncoding({"input_ids": x, "attention_mask": (x > 0).long()})
+
+
+class NgramEncoder(nn.Module):
+    def __init__(self, n_buckets=2 ** 19, dim=128):
+        super().__init__()
+        self.emb = nn.Embedding(n_buckets, dim, padding_idx=0)
+        nn.init.normal_(self.emb.weight, std=0.1)
+        self.hidden_size = dim
+
+    def forward(self, input_ids, attention_mask):
+        from types import SimpleNamespace
+        return SimpleNamespace(last_hidden_state=self.emb(input_ids))
+
+
+def load_tokenizer(encoder_name):
+    return NgramTokenizer() if encoder_name == "char-ngram" else AutoTokenizer.from_pretrained(encoder_name)
+
+
 class H3Classifier(nn.Module):
     def __init__(self, encoder_name, n_cells, dropout=0.1):
         super().__init__()
-        self.encoder = AutoModel.from_pretrained(encoder_name)
-        d = self.encoder.config.hidden_size
+        if encoder_name == "char-ngram":
+            self.encoder = NgramEncoder()
+            d = self.encoder.hidden_size
+        else:
+            self.encoder = AutoModel.from_pretrained(encoder_name)
+            d = self.encoder.config.hidden_size
         # Pretrained encoders give sentence vectors that are almost the same for every input (a few dimensions
         # carry large constant values). The heads then learn "always answer the commonest cell" and the text is
         # ignored. BatchNorm centres and scales every dimension across the batch, so only what differs between
         # addresses is left for the heads to use.
         self.norm = nn.BatchNorm1d(d)
         self.drop = nn.Dropout(dropout)
+        self.mlp = nn.Sequential(nn.Linear(d, 512), nn.GELU(), nn.Dropout(dropout)) if encoder_name == "char-ngram" else nn.Identity()
+        d = 512 if encoder_name == "char-ngram" else d
         self.heads = nn.ModuleDict({str(r): nn.Linear(d, n) for r, n in n_cells.items()})
 
     def forward(self, input_ids, attention_mask):
         h = self.encoder(input_ids=input_ids, attention_mask=attention_mask).last_hidden_state
-        v = self.drop(self.norm(mean_pool(h, attention_mask).float()))
+        v = self.mlp(self.drop(self.norm(mean_pool(h, attention_mask).float())))
         return {int(r): head(v) for r, head in self.heads.items()}
 
 
 def train_model(train, cells, encoder_name="google/muril-base-cased", epochs=3, batch_size=64, lr=3e-5, head_lr=1e-3,
-                max_len=64, loss_weights=None, log_every=200, val=None, seed=7, fp16=True):
-    """Returns (model, tokenizer). Prints the loss as it goes, and validation error each epoch if val is given."""
+                max_len=64, loss_weights=None, log_every=200, val=None, seed=7, fp16=True, check_after=300):
+    """Returns (model, tokenizer). Prints the loss as it goes, and validation error each epoch if val is given.
+
+    Safety check: after `check_after` steps the model is asked about 500 validation addresses. If it gives fewer
+    than 20 different answers it is ignoring the text, and training stops with an error instead of burning GPU time.
+    """
     dev = device()
-    tok = AutoTokenizer.from_pretrained(encoder_name)
+    tok = load_tokenizer(encoder_name)
     model = H3Classifier(encoder_name, {r: len(v) for r, v in cells["vocab"].items()}).to(dev)
     opt = torch.optim.AdamW([{"params": model.encoder.parameters(), "lr": lr},
-                             {"params": list(model.heads.parameters()) + list(model.norm.parameters()), "lr": head_lr}], weight_decay=0.01)
+                             {"params": list(model.heads.parameters()) + list(model.norm.parameters()) + list(model.mlp.parameters()),
+                              "lr": head_lr}], weight_decay=0.01)
     texts = train["text"].tolist()
     steps = epochs * int(np.ceil(len(texts) / batch_size))
     sched = warmup_linear(opt, steps)
     amp = fp16 and dev.type == "cuda"                  # 16-bit maths: faster on GPU, occasionally unstable
     scaler = torch.amp.GradScaler(enabled=amp)
-    w = loss_weights or {r: 1.0 for r in cells["resolutions"]}
+    # coarse cells have many examples each and are learned first; fine cells have few, so they weigh less
+    w = loss_weights or dict(zip(cells["resolutions"], (1.0, 0.5, 0.25, 0.25, 0.25)))
     y = {r: torch.tensor(cells["labels"][r]) for r in cells["resolutions"]}
     step, run, t0 = 0, 0.0, time.time()
     for ep in range(epochs):
@@ -97,6 +154,14 @@ def train_model(train, cells, encoder_name="google/muril-base-cased", epochs=3, 
             if step % log_every == 0:
                 print(f"epoch {ep + 1} step {step}/{steps} loss {run / log_every:.3f} ({time.time() - t0:.0f}s)")
                 run = 0.0
+            if val is not None and len(val) and step == min(check_after, steps):
+                p = predict(model, tok, val.head(500), cells, max_len=max_len)
+                spread = p[["lat", "lon"]].round(5).drop_duplicates().shape[0]
+                print(f"safety check at step {step}: {spread} different answers for {min(500, len(val))} validation addresses")
+                if spread < 20:
+                    raise RuntimeError("The model gives the same few answers for every address, so it is ignoring the text. "
+                                       "Training stopped to save GPU time. Send the training output for a fix.")
+                model.train()
         if val is not None and len(val):
             p = predict(model, tok, val, cells, max_len=max_len)
             from bench.geo import haversine_m
