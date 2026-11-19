@@ -48,12 +48,17 @@ class H3Classifier(nn.Module):
         super().__init__()
         self.encoder = AutoModel.from_pretrained(encoder_name)
         d = self.encoder.config.hidden_size
+        # Pretrained encoders give sentence vectors that are almost the same for every input (a few dimensions
+        # carry large constant values). The heads then learn "always answer the commonest cell" and the text is
+        # ignored. BatchNorm centres and scales every dimension across the batch, so only what differs between
+        # addresses is left for the heads to use.
+        self.norm = nn.BatchNorm1d(d)
         self.drop = nn.Dropout(dropout)
         self.heads = nn.ModuleDict({str(r): nn.Linear(d, n) for r, n in n_cells.items()})
 
     def forward(self, input_ids, attention_mask):
         h = self.encoder(input_ids=input_ids, attention_mask=attention_mask).last_hidden_state
-        v = self.drop(mean_pool(h, attention_mask))
+        v = self.drop(self.norm(mean_pool(h, attention_mask).float()))
         return {int(r): head(v) for r, head in self.heads.items()}
 
 
@@ -64,7 +69,7 @@ def train_model(train, cells, encoder_name="google/muril-base-cased", epochs=3, 
     tok = AutoTokenizer.from_pretrained(encoder_name)
     model = H3Classifier(encoder_name, {r: len(v) for r, v in cells["vocab"].items()}).to(dev)
     opt = torch.optim.AdamW([{"params": model.encoder.parameters(), "lr": lr},
-                             {"params": model.heads.parameters(), "lr": head_lr}], weight_decay=0.01)
+                             {"params": list(model.heads.parameters()) + list(model.norm.parameters()), "lr": head_lr}], weight_decay=0.01)
     texts = train["text"].tolist()
     steps = epochs * int(np.ceil(len(texts) / batch_size))
     sched = warmup_linear(opt, steps)
