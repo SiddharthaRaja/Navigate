@@ -1,52 +1,67 @@
-# Leaderboard (Hyderabad, 2026-11-16)
+# Leaderboard (Hyderabad, 2026-11-18)
 
-Trial run on a 60,000-building sample with local baselines only. Replace by re-running notebook 09 after the full build.
+Baselines and open geocoders only. Trained models and paid geocoders are added as they are run.
 
 Full test sets:
 
 | split     | model            |    n |   coverage |   acc@100 |   acc@500 |   acc@1000 |      p50 |      p90 |   misroute |
 |:----------|:-----------------|-----:|-----------:|----------:|----------:|-----------:|---------:|---------:|-----------:|
-| test_cold | city_centroid    | 2946 |      1     |     0     |     0     |      0     |  9363.4  | 16776    |      1     |
-| test_cold | gazetteer_rules  | 2946 |      0.958 |     0.121 |     0.528 |      0.643 |   343.7  |  8735.8  |      0.307 |
-| test_cold | oracle_reference | 2946 |      0.993 |     0.275 |     0.87  |      0.964 |   171.35 |   593.12 |    nan     |
-| test_cold | pincode_centroid | 2946 |      1     |     0     |     0.017 |      0.091 |  3312.7  | 13614.5  |      0.522 |
-| test_cold | tfidf_knn        | 2946 |      0.997 |     0.007 |     0.144 |      0.292 |  4070.35 | 18291.3  |      0.623 |
-| test_real | city_centroid    | 1379 |      1     |     0     |     0     |      0.001 | 12885.4  | 23885.5  |    nan     |
-| test_real | gazetteer_rules  | 1379 |      0.787 |     0.286 |     0.468 |      0.563 |   243.7  |  2528.22 |    nan     |
-| test_real | pincode_centroid | 1379 |      1     |     0.006 |     0.066 |      0.216 |  2112.4  | 23867.3  |    nan     |
-| test_real | tfidf_knn        | 1379 |      0.98  |     0.026 |     0.335 |      0.417 |  2209.1  | 24597.4  |    nan     |
-| test_rel  | city_centroid    | 1269 |      1     |     0     |     0.001 |      0.003 |  8833.4  | 15472.1  |      0.999 |
-| test_rel  | gazetteer_rules  | 1269 |      0.975 |     0.372 |     0.697 |      0.753 |   140.6  |  9861.5  |      0.252 |
-| test_rel  | oracle_reference | 1269 |      1     |     0.676 |     1     |      1     |    67.9  |   186.82 |    nan     |
-| test_rel  | pincode_centroid | 1269 |      1     |     0     |     0.025 |      0.117 |  3743.3  | 13251.5  |      0.572 |
-| test_rel  | tfidf_knn        | 1269 |      0.995 |     0.029 |     0.23  |      0.336 |  4228    | 17745.9  |      0.632 |
-| test_warm | city_centroid    | 2939 |      1     |     0     |     0.001 |      0.007 | 11074    | 21099.2  |      1     |
-| test_warm | gazetteer_rules  | 2939 |      0.958 |     0.137 |     0.579 |      0.689 |   290.8  |  5652.04 |      0.277 |
-| test_warm | oracle_reference | 2939 |      0.956 |     0.271 |     0.863 |      0.936 |   169.25 |   496.14 |    nan     |
-| test_warm | pincode_centroid | 2939 |      1     |     0.005 |     0.076 |      0.21  |  3407.9  | 17382.1  |      0.529 |
-| test_warm | tfidf_knn        | 2939 |      1     |     0.184 |     0.757 |      0.851 |   239.6  |  2911.36 |      0.19  |
+| test_cold | city_centroid    | 2936 |      1     |     0     |     0     |      0     |  9896.6  | 16769.6  |      1     |
+| test_cold | gazetteer_rules  | 2936 |      0.958 |     0.166 |     0.557 |      0.656 |   291.6  |  7778.82 |      0.308 |
+| test_cold | nominatim        |  900 |      0.104 |     0.018 |     0.063 |      0.074 |   285.9  |  8240.75 |      0.287 |
+| test_cold | oracle_reference | 2936 |      0.989 |     0.353 |     0.913 |      0.981 |   146.8  |   398.02 |    nan     |
+| test_cold | photon           |  900 |      0.212 |     0.028 |     0.116 |      0.141 |   399.6  | 13798.7  |      0.361 |
+| test_cold | pincode_centroid | 2936 |      1     |     0.001 |     0.022 |      0.101 |  4392.1  | 13594.1  |      0.587 |
+| test_cold | tfidf_knn        | 2936 |      0.999 |     0.006 |     0.147 |      0.299 |  3707.5  | 18934    |      0.624 |
+| test_real | city_centroid    | 2879 |      1     |     0     |     0.001 |      0.006 | 10299.2  | 22832.5  |    nan     |
+| test_real | gazetteer_rules  | 2879 |      0.97  |     0.18  |     0.372 |      0.522 |   842.5  | 14234.8  |    nan     |
+| test_real | nominatim        |  300 |      0.383 |     0.313 |     0.353 |      0.357 |     0    |   401.64 |    nan     |
+| test_real | photon           |  300 |      0.523 |     0.39  |     0.427 |      0.44  |     0    |  3468.16 |    nan     |
+| test_real | pincode_centroid | 2879 |      1     |     0.009 |     0.123 |      0.33  |  1358.8  | 22801    |    nan     |
+| test_real | tfidf_knn        | 2879 |      0.99  |     0.04  |     0.305 |      0.427 |  1498.7  | 19533.1  |    nan     |
+| test_rel  | city_centroid    | 1750 |      1     |     0     |     0.001 |      0.003 |  9832.5  | 20337.9  |      0.999 |
+| test_rel  | gazetteer_rules  | 1750 |      0.957 |     0.379 |     0.65  |      0.707 |   150.3  |  7368.11 |      0.25  |
+| test_rel  | nominatim        |  450 |      0.009 |     0.002 |     0.007 |      0.007 |   151.1  | 13042.3  |      0.75  |
+| test_rel  | oracle_reference | 1750 |      1     |     0.733 |     0.999 |      1     |    50.5  |   167.45 |    nan     |
+| test_rel  | photon           |  450 |      0.069 |     0.02  |     0.036 |      0.044 |   300.2  | 13072.4  |      0.355 |
+| test_rel  | pincode_centroid | 1750 |      1     |     0.001 |     0.043 |      0.152 |  4233.8  | 13921.9  |      0.588 |
+| test_rel  | tfidf_knn        | 1750 |      0.997 |     0.077 |     0.311 |      0.401 |  2099.85 | 18644.8  |      0.552 |
+| test_warm | city_centroid    | 2938 |      1     |     0     |     0.003 |      0.007 | 10818    | 21172.8  |      0.999 |
+| test_warm | gazetteer_rules  | 2938 |      0.96  |     0.174 |     0.582 |      0.673 |   278.9  |  9172.87 |      0.288 |
+| test_warm | nominatim        |  900 |      0.102 |     0.014 |     0.057 |      0.076 |   413.35 |  9624.63 |      0.326 |
+| test_warm | oracle_reference | 2938 |      0.98  |     0.34  |     0.917 |      0.966 |   144.3  |   379.5  |    nan     |
+| test_warm | photon           |  900 |      0.202 |     0.023 |     0.093 |      0.126 |   620.4  | 13820    |      0.407 |
+| test_warm | pincode_centroid | 2938 |      1     |     0.005 |     0.078 |      0.21  |  3285.15 | 17258    |      0.548 |
+| test_warm | tfidf_knn        | 2938 |      1     |     0.209 |     0.798 |      0.866 |   222.8  |  3353.26 |      0.167 |
 
 API subset (same rows for every system):
 
 | split     | model            |   n |   coverage |   acc@100 |   acc@500 |   acc@1000 |      p50 |      p90 |   misroute |
 |:----------|:-----------------|----:|-----------:|----------:|----------:|-----------:|---------:|---------:|-----------:|
-| test_cold | city_centroid    | 900 |      1     |     0     |     0     |      0     |  9210.15 | 16506.7  |      1     |
-| test_cold | gazetteer_rules  | 900 |      0.956 |     0.161 |     0.561 |      0.652 |   288.35 | 10668.9  |      0.31  |
-| test_cold | oracle_reference | 900 |      0.996 |     0.37  |     0.894 |      0.977 |   156.5  |   502.7  |    nan     |
-| test_cold | pincode_centroid | 900 |      1     |     0     |     0.021 |      0.071 |  4640.05 | 14150.5  |      0.614 |
-| test_cold | tfidf_knn        | 900 |      1     |     0.006 |     0.119 |      0.263 |  5767.65 | 18862.3  |      0.672 |
-| test_real | city_centroid    | 300 |      1     |     0     |     0     |      0.003 | 14956.9  | 23883.4  |    nan     |
-| test_real | gazetteer_rules  | 300 |      0.77  |     0.283 |     0.483 |      0.557 |   190.8  |  2538.2  |    nan     |
-| test_real | oracle_reference | 300 |      0     |     0     |     0     |      0     |   nan    |   nan    |    nan     |
-| test_real | pincode_centroid | 300 |      1     |     0.003 |     0.073 |      0.203 |  2914.35 | 23868.1  |    nan     |
-| test_real | tfidf_knn        | 300 |      0.967 |     0.023 |     0.327 |      0.417 |  3317.85 | 22515.6  |    nan     |
-| test_rel  | city_centroid    | 450 |      1     |     0     |     0.002 |      0.007 |  9505.8  | 16937.8  |      0.998 |
-| test_rel  | gazetteer_rules  | 450 |      0.978 |     0.416 |     0.689 |      0.753 |   131.75 | 10097.8  |      0.266 |
-| test_rel  | oracle_reference | 450 |      1     |     0.727 |     1     |      1     |    53.8  |   180.66 |    nan     |
-| test_rel  | pincode_centroid | 450 |      1     |     0     |     0.013 |      0.111 |  3825.35 | 13684.7  |      0.576 |
-| test_rel  | tfidf_knn        | 450 |      0.996 |     0.04  |     0.231 |      0.34  |  3568.15 | 17696.7  |      0.616 |
-| test_warm | city_centroid    | 900 |      1     |     0     |     0.001 |      0.009 | 11070.4  | 21310    |      0.999 |
-| test_warm | gazetteer_rules  | 900 |      0.943 |     0.199 |     0.62  |      0.722 |   251.7  |  6560.64 |      0.254 |
-| test_warm | oracle_reference | 900 |      0.976 |     0.379 |     0.899 |      0.959 |   140.95 |   440.56 |    nan     |
-| test_warm | pincode_centroid | 900 |      1     |     0.004 |     0.062 |      0.188 |  4739.5  | 18452.1  |      0.604 |
-| test_warm | tfidf_knn        | 900 |      1     |     0.168 |     0.748 |      0.833 |   251.1  |  5964.46 |      0.221 |
+| test_cold | city_centroid    | 900 |      1     |     0     |     0     |      0     |  9753.5  | 14806.4  |      1     |
+| test_cold | gazetteer_rules  | 900 |      0.958 |     0.209 |     0.583 |      0.669 |   270.15 |  9517.32 |      0.309 |
+| test_cold | nominatim        | 900 |      0.104 |     0.018 |     0.063 |      0.074 |   285.9  |  8240.75 |      0.287 |
+| test_cold | oracle_reference | 900 |      0.988 |     0.448 |     0.93  |      0.983 |   115.9  |   324.42 |    nan     |
+| test_cold | photon           | 900 |      0.212 |     0.028 |     0.116 |      0.141 |   399.6  | 13798.7  |      0.361 |
+| test_cold | pincode_centroid | 900 |      1     |     0     |     0.017 |      0.088 |  4822.35 | 13648.6  |      0.641 |
+| test_cold | tfidf_knn        | 900 |      0.999 |     0.007 |     0.134 |      0.284 |  5577.3  | 19702.2  |      0.655 |
+| test_real | city_centroid    | 300 |      1     |     0     |     0     |      0.01  |  9944.55 | 22778.6  |    nan     |
+| test_real | gazetteer_rules  | 300 |      0.983 |     0.203 |     0.42  |      0.553 |   730.8  |  7326.6  |    nan     |
+| test_real | nominatim        | 300 |      0.383 |     0.313 |     0.353 |      0.357 |     0    |   401.64 |    nan     |
+| test_real | photon           | 300 |      0.523 |     0.39  |     0.427 |      0.44  |     0    |  3468.16 |    nan     |
+| test_real | pincode_centroid | 300 |      1     |     0.01  |     0.123 |      0.34  |  1281.55 | 22757    |    nan     |
+| test_real | tfidf_knn        | 300 |      0.983 |     0.047 |     0.327 |      0.457 |  1249.4  | 21127.6  |    nan     |
+| test_rel  | city_centroid    | 450 |      1     |     0     |     0.002 |      0.007 |  9973.65 | 19789.4  |      1     |
+| test_rel  | gazetteer_rules  | 450 |      0.971 |     0.371 |     0.664 |      0.724 |   147.6  |  6862.76 |      0.24  |
+| test_rel  | nominatim        | 450 |      0.009 |     0.002 |     0.007 |      0.007 |   151.1  | 13042.3  |      0.75  |
+| test_rel  | oracle_reference | 450 |      1     |     0.727 |     1     |      1     |    48.45 |   162.27 |    nan     |
+| test_rel  | photon           | 450 |      0.069 |     0.02  |     0.036 |      0.044 |   300.2  | 13072.4  |      0.355 |
+| test_rel  | pincode_centroid | 450 |      1     |     0     |     0.04  |      0.162 |  4221.7  | 13245.3  |      0.584 |
+| test_rel  | tfidf_knn        | 450 |      0.998 |     0.051 |     0.258 |      0.349 |  2852.3  | 19508.5  |      0.586 |
+| test_warm | city_centroid    | 900 |      1     |     0     |     0.002 |      0.006 | 10682.4  | 21496.6  |      0.998 |
+| test_warm | gazetteer_rules  | 900 |      0.946 |     0.232 |     0.603 |      0.667 |   259.9  | 10632.3  |      0.298 |
+| test_warm | nominatim        | 900 |      0.102 |     0.014 |     0.057 |      0.076 |   413.35 |  9624.63 |      0.326 |
+| test_warm | oracle_reference | 900 |      0.984 |     0.419 |     0.926 |      0.971 |   123.9  |   363.3  |    nan     |
+| test_warm | photon           | 900 |      0.202 |     0.023 |     0.093 |      0.126 |   620.4  | 13820    |      0.407 |
+| test_warm | pincode_centroid | 900 |      1     |     0.007 |     0.07  |      0.163 |  4739.95 | 17511.2  |      0.63  |
+| test_warm | tfidf_knn        | 900 |      1     |     0.199 |     0.803 |      0.867 |   226.2  |  2578.24 |      0.174 |

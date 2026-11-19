@@ -332,7 +332,7 @@ function drawBoard() {
     const rows = res.filter(r => r.split === sp && r.slice === "overall" && !(/oracle/.test(r.model) && !r.coverage));
     if (!rows.length) return;
     const real = rows.filter(r => !/oracle/.test(r.model));
-    const best = {}; cols.forEach(([k]) => { const v = real.map(r => r[k]).filter(x => x != null); best[k] = /acc/.test(k) ? Math.max(...v) : /p50|p90|misroute/.test(k) ? Math.min(...v) : null; });
+    const best = {}; cols.forEach(([k]) => { const v = real.filter(r => !/p50|p90/.test(k) || (r.coverage ?? 0) >= 0.5).map(r => r[k]).filter(x => x != null); best[k] = /acc/.test(k) ? Math.max(...v) : /p50|p90|misroute/.test(k) ? Math.min(...v) : null; });
     h += `<h2>${esc(splitName(sp))}</h2><table><tr><th>Geocoder</th>${cols.map(c => `<th>${c[1]}</th>`).join("")}</tr>` +
       rows.map(r => `<tr><td>${esc(r.model.replace(/_/g, " "))}</td>${cols.map(([k, , f]) => `<td class="${!/oracle/.test(r.model) && best[k] != null && r[k] === best[k] ? "best" : ""}">${r[k] == null ? "–" : f(r[k])}</td>`).join("")}</tr>`).join("") + "</table>";
   });
@@ -341,7 +341,7 @@ function drawBoard() {
     h += `<h2>${esc(state.model.replace(/_/g, " "))} by slice, ${esc(splitName(state.split).toLowerCase())}</h2><p>Each row is one kind of address. Slices with fewer than 30 addresses are left out.</p><table><tr><th>Slice</th><th>addresses</th><th>within 100 m</th><th>within 500 m</th><th>median miss</th></tr>` +
       sl.map(r => `<tr><td>${esc(r.slice.replace(/_/g, " "))}: ${esc(String(r.value).toLowerCase().replace(/_/g, " "))}</td><td>${r.n}</td><td>${pct(r["acc@100"])}</td><td>${pct(r["acc@500"])}</td><td>${r.p50 == null ? "–" : dist(r.p50)}</td></tr>`).join("") + "</table>";
   }
-  h += `<h2>How to read this</h2><p>Every test address has a known true building. A miss is the straight-line distance from a geocoder's answer to that building. An address with no answer counts as a miss in the "within" columns. "Oracle reference" is the distance from the building to the best place actually named in the text: it shows how much the text itself pins down. ${esc(D.meta.note || "")} Generated ${esc(D.meta.generated)}.</p>
+  h += `<h2>How to read this</h2><p>Every test address has a known true building. A miss is the straight-line distance from a geocoder's answer to that building. An address with no answer counts as a miss in the "within" columns; the median and 90th percentile are over answered addresses only, so they are not marked best for a geocoder that answered fewer than half. "Oracle reference" is the distance from the building to the best place actually named in the text: it shows how much the text itself pins down. ${esc(D.meta.note || "")} Generated ${esc(D.meta.generated)}.</p>
   <p>Map data and real address text: OpenStreetMap contributors (ODbL). Synthetic addresses are generated from that map; flat and house numbers in them are invented.</p>`;
   $("board").innerHTML = h;
 }
