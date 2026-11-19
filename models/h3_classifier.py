@@ -58,7 +58,7 @@ class H3Classifier(nn.Module):
 
 
 def train_model(train, cells, encoder_name="google/muril-base-cased", epochs=3, batch_size=64, lr=3e-5, head_lr=1e-3,
-                max_len=64, loss_weights=None, log_every=200, val=None, seed=7):
+                max_len=64, loss_weights=None, log_every=200, val=None, seed=7, fp16=True):
     """Returns (model, tokenizer). Prints the loss as it goes, and validation error each epoch if val is given."""
     dev = device()
     tok = AutoTokenizer.from_pretrained(encoder_name)
@@ -68,16 +68,16 @@ def train_model(train, cells, encoder_name="google/muril-base-cased", epochs=3, 
     texts = train["text"].tolist()
     steps = epochs * int(np.ceil(len(texts) / batch_size))
     sched = warmup_linear(opt, steps)
-    scaler = torch.amp.GradScaler(enabled=dev.type == "cuda")
+    amp = fp16 and dev.type == "cuda"                  # 16-bit maths: faster on GPU, occasionally unstable
+    scaler = torch.amp.GradScaler(enabled=amp)
     w = loss_weights or {r: 1.0 for r in cells["resolutions"]}
     y = {r: torch.tensor(cells["labels"][r]) for r in cells["resolutions"]}
-    step, t0 = 0, time.time()
+    step, run, t0 = 0, 0.0, time.time()
     for ep in range(epochs):
         model.train()
-        run = 0.0
         for idx in batches(len(texts), batch_size, shuffle=True, seed=seed + ep):
             enc = tok([texts[i] for i in idx], padding=True, truncation=True, max_length=max_len, return_tensors="pt").to(dev)
-            with torch.autocast(dev.type, enabled=dev.type == "cuda"):
+            with torch.autocast(dev.type, enabled=amp):
                 out = model(enc["input_ids"], enc["attention_mask"])
                 loss = sum(w[r] * F.cross_entropy(out[r].float(), y[r][idx].to(dev)) for r in cells["resolutions"])
             opt.zero_grad(set_to_none=True)
@@ -96,7 +96,9 @@ def train_model(train, cells, encoder_name="google/muril-base-cased", epochs=3, 
             p = predict(model, tok, val, cells, max_len=max_len)
             from bench.geo import haversine_m
             e = haversine_m(val["lat"].to_numpy(), val["lon"].to_numpy(), p["lat"].to_numpy(), p["lon"].to_numpy())
-            print(f"epoch {ep + 1} done: validation median error {np.median(e):.0f} m, within 500 m {np.mean(e <= 500):.1%}")
+            spread = p[["lat", "lon"]].round(5).drop_duplicates().shape[0]
+            print(f"epoch {ep + 1} done: validation median error {np.median(e):.0f} m, within 500 m {np.mean(e <= 500):.1%}, "
+                  f"{spread} different answers for {len(p)} addresses (a handful means the model is ignoring the text)")
     return model, tok
 
 
