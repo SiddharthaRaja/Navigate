@@ -1,6 +1,6 @@
 # Leaderboard (Hyderabad, 2026-11-20)
 
-Baselines, open geocoders, model A (H3 classifier), model B (AddressBind) and model C (LLM with gazetteer retrieval, supervised fine-tuning only). Paid geocoders are added once keys are set.
+Baselines, open geocoders, model A (H3 classifier), model B (AddressBind) and model C (LLM with gazetteer retrieval, supervised fine-tuning only). Paid geocoders (Google, Ola Maps; run 2026-11-21) appear in the API subset only: their scores are kept, never their coordinates.
 
 Full test sets:
 
@@ -53,9 +53,11 @@ API subset (same rows for every system):
 | test_cold | addressbind      | 900 |      1     |     0.002 |     0.177 |      0.369 |  2306.9  | 16821.3  |      0.587 |
 | test_cold | city_centroid    | 900 |      1     |     0     |     0     |      0     |  9753.5  | 14806.4  |      1     |
 | test_cold | gazetteer_rules  | 900 |      0.958 |     0.209 |     0.583 |      0.669 |   270.15 |  9517.32 |      0.309 |
+| test_cold | google           | 900 |      1.000 |     0.082 |     0.459 |      0.616 |    601.2 |  17570.4 |      0.398 |
 | test_cold | h3_classifier    | 900 |      1     |     0.002 |     0.156 |      0.342 |  2168.55 | 16281.7  |      0.583 |
 | test_cold | llm_sft          | 900 |      0.986 |     0.096 |     0.47  |      0.574 |   598.7  | 12637.3  |      0.424 |
 | test_cold | nominatim        | 900 |      0.104 |     0.018 |     0.063 |      0.074 |   285.9  |  8240.75 |      0.287 |
+| test_cold | ola              | 900 |      0.991 |     0.063 |     0.291 |      0.370 |   6498.3 | 944791.1 |      0.642 |
 | test_cold | oracle_reference | 900 |      0.988 |     0.448 |     0.93  |      0.983 |   115.9  |   324.42 |    nan     |
 | test_cold | photon           | 900 |      0.212 |     0.028 |     0.116 |      0.141 |   399.6  | 13798.7  |      0.361 |
 | test_cold | pincode_centroid | 900 |      1     |     0     |     0.017 |      0.088 |  4822.35 | 13648.6  |      0.641 |
@@ -63,18 +65,22 @@ API subset (same rows for every system):
 | test_real | addressbind      | 300 |      1     |     0.01  |     0.187 |      0.347 |  2325.55 | 21727.4  |    nan     |
 | test_real | city_centroid    | 300 |      1     |     0     |     0     |      0.01  |  9944.55 | 22778.6  |    nan     |
 | test_real | gazetteer_rules  | 300 |      0.983 |     0.203 |     0.42  |      0.553 |   730.8  |  7326.6  |    nan     |
+| test_real | google           | 300 |      0.997 |     0.330 |     0.603 |      0.710 |    306.4 |   6600.2 |        nan |
 | test_real | h3_classifier    | 300 |      1     |     0.033 |     0.283 |      0.457 |  1225.65 | 13998.1  |    nan     |
 | test_real | llm_sft          | 300 |      0.98  |     0.017 |     0.273 |      0.373 |  1679.2  | 15213.2  |    nan     |
 | test_real | nominatim        | 300 |      0.383 |     0.313 |     0.353 |      0.357 |     0    |   401.64 |    nan     |
+| test_real | ola              | 300 |      0.993 |     0.410 |     0.627 |      0.700 |    215.9 |  11958.8 |        nan |
 | test_real | photon           | 300 |      0.523 |     0.39  |     0.427 |      0.44  |     0    |  3468.16 |    nan     |
 | test_real | pincode_centroid | 300 |      1     |     0.01  |     0.123 |      0.34  |  1281.55 | 22757    |    nan     |
 | test_real | tfidf_knn        | 300 |      0.983 |     0.047 |     0.327 |      0.457 |  1249.4  | 21127.6  |    nan     |
 | test_rel  | addressbind      | 450 |      1     |     0.04  |     0.287 |      0.436 |  1412.8  | 15874.1  |      0.467 |
 | test_rel  | city_centroid    | 450 |      1     |     0     |     0.002 |      0.007 |  9973.65 | 19789.4  |      1     |
 | test_rel  | gazetteer_rules  | 450 |      0.971 |     0.371 |     0.664 |      0.724 |   147.6  |  6862.76 |      0.24  |
+| test_rel  | google           | 450 |      1.000 |     0.202 |     0.518 |      0.660 |    438.1 |  16268.2 |      0.316 |
 | test_rel  | h3_classifier    | 450 |      1     |     0.044 |     0.287 |      0.422 |  1640.35 | 16223.1  |      0.5   |
 | test_rel  | llm_sft          | 450 |      0.989 |     0.276 |     0.609 |      0.698 |   264.9  | 11515.5  |      0.317 |
 | test_rel  | nominatim        | 450 |      0.009 |     0.002 |     0.007 |      0.007 |   151.1  | 13042.3  |      0.75  |
+| test_rel  | ola              | 450 |      0.993 |     0.184 |     0.402 |      0.462 |   1832.3 | 602517.7 |      0.546 |
 | test_rel  | oracle_reference | 450 |      1     |     0.727 |     1     |      1     |    48.45 |   162.27 |    nan     |
 | test_rel  | photon           | 450 |      0.069 |     0.02  |     0.036 |      0.044 |   300.2  | 13072.4  |      0.355 |
 | test_rel  | pincode_centroid | 450 |      1     |     0     |     0.04  |      0.162 |  4221.7  | 13245.3  |      0.584 |
@@ -82,10 +88,15 @@ API subset (same rows for every system):
 | test_warm | addressbind      | 900 |      1     |     0.156 |     0.718 |      0.837 |   270.35 |  4646.83 |      0.194 |
 | test_warm | city_centroid    | 900 |      1     |     0     |     0.002 |      0.006 | 10682.4  | 21496.6  |      0.998 |
 | test_warm | gazetteer_rules  | 900 |      0.946 |     0.232 |     0.603 |      0.667 |   259.9  | 10632.3  |      0.298 |
+| test_warm | google           | 900 |      0.998 |     0.083 |     0.444 |      0.587 |    623.4 |  26590.5 |      0.395 |
 | test_warm | h3_classifier    | 900 |      1     |     0.172 |     0.821 |      0.901 |   209.6  |   991.95 |      0.143 |
 | test_warm | llm_sft          | 900 |      0.987 |     0.129 |     0.62  |      0.741 |   319.65 |  8364.89 |      0.279 |
 | test_warm | nominatim        | 900 |      0.102 |     0.014 |     0.057 |      0.076 |   413.35 |  9624.63 |      0.326 |
+| test_warm | ola              | 900 |      0.994 |     0.064 |     0.311 |      0.372 |   6875.0 | 952302.1 |      0.646 |
 | test_warm | oracle_reference | 900 |      0.984 |     0.419 |     0.926 |      0.971 |   123.9  |   363.3  |    nan     |
 | test_warm | photon           | 900 |      0.202 |     0.023 |     0.093 |      0.126 |   620.4  | 13820    |      0.407 |
 | test_warm | pincode_centroid | 900 |      1     |     0.007 |     0.07  |      0.163 |  4739.95 | 17511.2  |      0.63  |
 | test_warm | tfidf_knn        | 900 |      1     |     0.199 |     0.803 |      0.867 |   226.2  |  2578.24 |      0.174 |
+
+
+Mappls (MapmyIndia) is not scored. On a free key its geocode reply matches the address (with geocode level and confidence) but returns only an eLoc place code, and the Place Details call that would turn an eLoc into coordinates returns no coordinates either (Mappls lists them as a premium offering). Checked 2026-11-21.
